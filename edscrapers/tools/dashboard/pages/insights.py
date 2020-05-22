@@ -1,54 +1,39 @@
 """ module creates the dashboard '/insights' page """
 
 # -*- coding: utf-8 -*-
-import os
-
 import dash
 import dash_table
-import pandas as pd
 import dash_daq as daq
 import plotly.graph_objects as go
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 
-from edscrapers.tools.stats.stats import Statistics
+import pandas as pd
+from edscrapers.tools.dashboard.pages.air import get_datasets_bars_data
+
 from edscrapers.tools.dashboard.utils import buttonsToRemove
+from edscrapers.tools.dashboard.pages.insights_data import InsightsData
 from edscrapers.tools.dashboard.pages.tooltips import (INSIGHTS_TOTALS_SCRAPED_TOOLTIP,
                                                 INSIGHTS_TOTALS_INGESTED_TOOLTIP,
                                                 INSIGHTS_DATASETS_BY_DOMAIN_TOOOLTIP,
                                                 INSIGHTS_DATASETS_BY_OFFICE_TOOOLTIP,
                                                 INSIGHTS_RESOURCES_BY_DOMAIN_TOOOLTIP,
-                                                INSIGHTS_RESOURCES_BY_OFFICE_TOOOLTIP)
-from edscrapers.tools.dashboard.pages.air import (get_datasets_bars_data, 
-                                                 get_table_rows_by_office,
-                                                 get_total_resources_by_office)
+                                                INSIGHTS_RESOURCES_BY_OFFICE_TOOOLTIP,
+                                                INSIGHTS_TOTALS_INITIAL_TOOLTIP)
 from edscrapers.tools.dashboard.pages.components import header, led_display
                                         
 class InsightsPage():
 
-    # path to Excel sheet used for creating stas dataframes
-    PATH_TO_EXCEL_SHEET = os.path.join(os.getenv('ED_OUTPUT_PATH'), 'tools', 'stats', 'metrics.xlsx')
-
-    def get_compare_dict(self):
-        if not hasattr(self, 'stats'):
-            self.stats = Statistics()
-        return self.stats.get_compare_dict()
-
-
-    def _get_df_from_excel_sheet(self, sheet_name):
-        """ private helper function used to read excel sheets and 
-            create dataframes from the specified sheet"""
-
-        return pd.read_excel(self.PATH_TO_EXCEL_SHEET, sheet_name, engine='openpyxl')
-
-
+    def __init__(self):
+        self.data = InsightsData()
+    
     def dataset_by_domain_table(self):
         """ function used to create the Table component which displays 
         the number of pages/datasets obtained from each domain """
 
         # get the dataframe from the excel sheet
-        df = self._get_df_from_excel_sheet('PAGE COUNT (DATOPIAN)')
+        df = self.data.get_df_from_excel_sheet('PAGE COUNT (DATOPIAN)')
 
         # add a total of page count at the end of the df
         total_page_count = df['page count'].sum()   
@@ -101,7 +86,7 @@ class InsightsPage():
         """ function creates a bar chart which displays the 
         number of pages/datasets per domain """
         # the the dataframe from the Excel sheet
-        df = self._get_df_from_excel_sheet('PAGE COUNT (DATOPIAN)')
+        df = self.data.get_df_from_excel_sheet('PAGE COUNT (DATOPIAN)')
         # create the bar chart using the created dataframe
         return dcc.Graph(
             id='dataset_by_domain_graph',
@@ -127,7 +112,7 @@ class InsightsPage():
         # and unifiy it into one dataframe
 
         # get the resources collected from the datopian end of the air-datopian intersect
-        df = self._get_df_from_excel_sheet('RESOURCE COUNT PER DOMAIN (DATOPIAN-AIR INTERSECTION)')
+        df = self.data.get_df_from_excel_sheet('RESOURCE COUNT PER DOMAIN (DATOPIAN-AIR INTERSECTION)')
 
         # create a dataframe to hold the necessary info we use for this task
         working_df1 = pd.DataFrame(columns=['domain'])
@@ -135,7 +120,7 @@ class InsightsPage():
         working_df1['resource count'] = df['resource count_datopian']
 
         # get the resources from the DAtopian only resource count
-        df = self._get_df_from_excel_sheet('RESOURCE COUNT PER DOMAIN (DATOPIAN ONLY)')
+        df = self.data.get_df_from_excel_sheet('RESOURCE COUNT PER DOMAIN (DATOPIAN ONLY)')
         
         working_df2 = pd.DataFrame(columns=['domain'])
         working_df2['domain'] = df['domain']
@@ -193,42 +178,11 @@ class InsightsPage():
                     }
         )
 
-
-    def resources_by_domain_df(self):
-        # this function uses a concatenation of 2 different excel sheets and dataframes
-        df = self._get_df_from_excel_sheet('RESOURCE COUNT PER DOMAIN (DATOPIAN-AIR INTERSECTION)')
-        working_df1 = pd.DataFrame(columns=['domain'])
-        working_df1['domain'] = df['domain']
-        working_df1['resource count'] = df['resource count_datopian']
-
-        df = self._get_df_from_excel_sheet('RESOURCE COUNT PER DOMAIN (DATOPIAN ONLY)')
-        working_df2 = pd.DataFrame(columns=['domain'])
-        working_df2['domain'] = df['domain']
-        working_df2['resource count'] = df['resource count']
-
-        # concatenate the 2 dataframes
-        return pd.concat([working_df1, working_df2], axis='index', ignore_index=True)
-
-    def resources_by_publisher_df(self):
-        data = dict(get_total_resources_by_office('datopian'))
-
-        publishers = []
-        counts = []
-        for key,value in data.items():
-            publishers.append(key)
-            counts.append(value)
-
-        df = pd.DataFrame(columns=['publisher','resource count'])
-        df['publisher'] = publishers
-        df['resource count'] = counts
-
-        return df
-
     def resources_by_domain_pie(self):
         """" function is used to created a pie chart showing
         the number of resources gotten per domain """
 
-        df = self.resources_by_domain_df()
+        df = self.data.resources_by_domain_df()
 
         pie_figure = go.Figure(data=[go.Pie(labels=df['domain'],
                                             values=df['resource count'],
@@ -248,7 +202,7 @@ class InsightsPage():
 
     def resources_by_publisher_table(self):
 
-        df = self.resources_by_publisher_df()
+        df = self.data.resources_by_publisher_df()
 
          # add a total of resource count at the end of the df
         total_resource_count = df['resource count'].sum()   
@@ -291,7 +245,7 @@ class InsightsPage():
 
     def resources_by_publisher_pie(self):
 
-        df = self.resources_by_publisher_df()
+        df = self.data.resources_by_publisher_df()
 
         pie_figure = go.Figure(data=[go.Pie(labels=df['publisher'],
                                             values=df['resource count'],
@@ -309,47 +263,47 @@ class InsightsPage():
                          }
                         )
 
-    def dataset_by_office_data(self):
-        # returns the rows for the datasets by office table including total
-        rows = get_table_rows_by_office('datasets_by_office')
-
-        total_air = 0
-        total_datopian = 0
-
-        for row in rows: 
-            total_air += row.get('air', 0)
-            total_datopian += row.get('datopian', 0)
-
-        total_row = {'s': 'Total', 'air' : total_air, 'datopian' : total_datopian}
-        rows.append(total_row)
-
-        return rows
-
 def generate_split_layout():
     """" function generates the latyout for this page """
 
     p = InsightsPage()
 
     return html.Div(children=[
-   
+
     # Totals Based on Original Scraper
     html.Hr(style={'margin-top':'0px'}),
-    header('Based on original crawler', 'totals-crawler', INSIGHTS_TOTALS_SCRAPED_TOOLTIP),
+    header('Initial Estimate', 'totals-initial', INSIGHTS_TOTALS_INITIAL_TOOLTIP),
     html.Hr(),
 
     # LED displays
-    led_display(p.get_compare_dict()['total']['datopian']['datasets'], 
+    led_display(p.data.get_initial_estimate_data("datasets"), 
         "DATASETS"),
-    led_display(p.get_compare_dict()['total']['datopian']['resources'], 
+    led_display(p.data.get_initial_estimate_data("resources"), 
         "RESOURCES"),
-    led_display(sum(s for s in p.get_compare_dict()['total']['datopian']['pages'].values()),
+    led_display(p.data.get_initial_estimate_data("pages"),
         "PAGES"),
-    led_display(p.resources_by_domain_df().count()['domain'], 
+    led_display(p.data.get_initial_estimate_data("domains"), 
         "DOMAINS"),
+
 
     # Totals Based on Original Scraper
     html.Hr(style={'margin-top':'30px'}),
-    header('Ingested into data portal', 'totals-ingested', INSIGHTS_TOTALS_INGESTED_TOOLTIP),
+    header('Based on Scraper', 'totals-scraper', INSIGHTS_TOTALS_SCRAPED_TOOLTIP),
+    html.Hr(),
+
+    # LED displays
+    led_display(p.data.get_compare_dict()['total']['datopian']['datasets'], 
+        "DATASETS"),
+    led_display(p.data.get_compare_dict()['total']['datopian']['resources'], 
+        "RESOURCES"),
+    led_display(sum(s for s in p.data.get_compare_dict()['total']['datopian']['pages'].values()),
+        "PAGES"),
+    led_display(p.data.resources_by_domain_df().count()['domain'], 
+        "DOMAINS"),
+
+    # Totals Ingested in the Data Portal
+    html.Hr(style={'margin-top':'30px'}),
+    header('Ingested into Data Portal', 'totals-ingested', INSIGHTS_TOTALS_INGESTED_TOOLTIP),
     html.Hr(),
 
     # LED displays
@@ -373,7 +327,7 @@ def generate_split_layout():
         dash_table.DataTable(
             columns=[{'name': 'Publisher', 'id': 's'}, 
                     {'name': 'Count', 'id': 'datopian'}],
-            data=p.dataset_by_office_data(),
+            data=p.data.dataset_by_office_data(),
             sort_action='native',
             style_cell={'textAlign': 'left'},
             style_cell_conditional=[
