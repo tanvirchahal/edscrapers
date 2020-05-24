@@ -59,6 +59,9 @@ class InsightsData():
 
         return rows
 
+    def dataset_by_office_portal_data(self):
+        return self.ckan_api.get_organizations_data()
+
     def resources_by_publisher_df(self):
         data = dict(get_total_resources_by_office('datopian'))
 
@@ -84,3 +87,6 @@ class InsightsData():
         }
 
         return data.get(id, 0)
+
+    def get_total_scraped_datasets(self):
+        return self.ckan_api.get_total_number_scraped_packages()

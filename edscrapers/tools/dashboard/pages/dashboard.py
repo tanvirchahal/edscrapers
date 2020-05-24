@@ -51,21 +51,23 @@ class DashboardPage():
         package_names = self.ckan_api.get_package_list()
         return(len(package_names))
 
+    def get_total_scraped_datasets(self):
+        return self.ckan_api.get_total_number_scraped_packages()
+
+    def get_total_manually_added(self):
+        return self.get_total_datasets_in_portal() - self.get_total_scraped_datasets()
+
     def datasets_in_portal_pie_data(self):
 
         labels = [] 
         values = []
 
-        data = self.json_data()
-        for json_dict in data:
-
-            if json_dict.get("id") == "total":
-                continue
-
-            label = json_dict.get("label")
-            value = json_dict.get("value")
-            labels.append(label)
-            values.append(value)
+        labels.append(self.datasets_in_portal_led_label("scraped"))
+        values.append(self.get_total_scraped_datasets())
+        labels.append(self.datasets_in_portal_led_label("amended"))
+        values.append(0)
+        labels.append(self.datasets_in_portal_led_label("manually"))
+        values.append(self.get_total_manually_added())
         
         return labels, values
 
@@ -116,11 +118,11 @@ def generate_layout():
     label_total = p.datasets_in_portal_led_label("total")
     value_total = p.get_total_datasets_in_portal()
     label_scraped = p.datasets_in_portal_led_label("scraped")
-    value_scraped = 0
+    value_scraped = p.get_total_scraped_datasets()
     label_amended = p.datasets_in_portal_led_label("amended")
     value_amended = 0
     label_manually = p.datasets_in_portal_led_label("manually")
-    value_manually = 0
+    value_manually = p.get_total_manually_added()
 
     return html.Div(children=[
     

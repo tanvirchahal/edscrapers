@@ -307,7 +307,7 @@ def generate_split_layout():
     html.Hr(),
 
     # LED displays
-    led_display(000,
+    led_display(p.data.get_total_scraped_datasets(),
         "DATASETS"),
     led_display(000,
         "RESOURCES"),
@@ -328,6 +328,7 @@ def generate_split_layout():
             columns=[{'name': 'Publisher', 'id': 's'}, 
                     {'name': 'Count', 'id': 'datopian'}],
             data=p.data.dataset_by_office_data(),
+            #data=p.data.dataset_by_office_portal_data(),
             sort_action='native',
             style_cell={'textAlign': 'left'},
             style_cell_conditional=[

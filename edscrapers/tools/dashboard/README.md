@@ -39,3 +39,53 @@ Before running the `eds dash` command, perform these steps to ensure the dashboa
 6. Run at least one `datajson` transformer process for one of the offices -- **compulsory step**
 
 7. Run the `rag` transformer on each office/scraper -- **compulsory step**
+
+## Data Displayed
+
+### Dashboard Home Page
+
+### Scraping Insights
+
+**Datasets by Publisher** - Total Datasets ingested into the data portal by Publisher (aka Office)   
+
+**Resources by Publisher** - Total Resources ingested into the data portal by Publisher (aka Office)
+
+**Datasets by Domain** - Total Datasets ingested into the data portal by Domain (webpages). A Publisher will have 1 or more domains. 
+
+**Resources by Domain** - Total Resources (ie datafiles / data assets) ingested into the Portal by Domain 
+
+### Data Quality
+
+The Score reflect the whether how complete the metadata is in the form. 100% would mean that all the metadata fields were present (this does not mean that the metadata is correct, as the metadata has either been ingested by a scraper or input by a user. In other words, the metadata quality has not been assessed, the algorithm only checks how many metadata fields have been entered). 
+
+The score is shown by two dimensions: by Publisher and by Domain.
+
+Data quality is calculated in the following way. For each metadata filed that is present in a dataset, points are assigned as per the table below
+
+| Field | Weight |
+| -------- | -------- | 
+| Title     | 10     | 
+| Date period - Start | 10 |
+| Date period - End   | 10 |
+| Categories | 9.5 |
+| Tags | 9.5 |
+| Description | 9 |
+| Organization | 8.5 |
+| Publisher | 8.5 |
+| Data level | 7 |
+| Spatial | 6 |
+| Created Date | 5 |
+| Frequency | 5 |
+| Data Steward Name | 4 |
+| Data Steward Email | 4 |
+| Helpdesk Phone | 4 |
+| Helpdesk Email | 4 |
+| License | 4 |
+| Bureau code | 1 |
+| Program code | 1 |
+| Access level | 1 |
+
+### Trends
+
+This shows the progression of metadata quality across all offices over time.
+
